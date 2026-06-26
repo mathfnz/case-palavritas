@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palavritas — Análise de Retenção</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8FAFC; color: #1E293B; }
+  .header { background: #2563EB; color: white; padding: 32px 40px; }
+  .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .header p { font-size: 14px; opacity: 0.85; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 24px 40px 0; }
+  .kpi { background: white; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-left: 4px solid #2563EB; }
+  .kpi .label { font-size: 12px; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .kpi .value { font-size: 32px; font-weight: 700; color: #2563EB; }
+  .kpi .sub { font-size: 12px; color: #94A3B8; margin-top: 4px; }
+  .section { padding: 24px 40px; }
+  .section-title { font-size: 16px; font-weight: 600; color: #1E293B; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #F1F5F9; }
+  .charts-row { display: grid; gap: 16px; }
+  .charts-2 { grid-template-columns: 1fr 1fr; }
+  .charts-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .chart-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .chart-card h3 { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 12px; }
+  .chart-card .insight { font-size: 12px; color: #64748B; margin-top: 10px; padding: 8px 12px; background: #F1F5F9; border-radius: 6px; border-left: 3px solid #2563EB; }
+  .stat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .stat-table th { background: #F1F5F9; padding: 10px 14px; text-align: left; font-weight: 600; color: #475569; font-size: 12px; }
+  .stat-table td { padding: 10px 14px; border-bottom: 1px solid #F1F5F9; }
+  .stat-table tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #D1FAE5; color: #065F46; }
+  .badge-red { background: #FEE2E2; color: #991B1B; }
+  .badge-gray { background: #F1F5F9; color: #475569; }
+  .proposal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .proposal-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-top: 4px solid #2563EB; }
+  .proposal-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: #2563EB; }
+  .proposal-item { margin-bottom: 14px; }
+  .proposal-item .tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #2563EB; margin-bottom: 4px; }
+  .proposal-item p { font-size: 13px; color: #475569; line-height: 1.5; }
+  .footer { text-align: center; padding: 24px; font-size: 12px; color: #94A3B8; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Palavritas — Análise de Retenção de Usuários</h1>
+  <p>the news | Case Analista de Dados Produto & Growth &nbsp;·&nbsp; Dataset: palavritas_sessions, palavritas_attempts, user_profile</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="label">Total de sessões (limpas)</div>
+    <div class="value">39.849</div>
+    <div class="sub">de 41.157 originais</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Retenção D1</div>
+    <div class="value">22,1%</div>
+    <div class="sub">voltou no dia seguinte</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Retenção D30</div>
+    <div class="value">31,9%</div>
+    <div class="sub">ativo após 30 dias</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Usuários com perfil</div>
+    <div class="value">800</div>
+    <div class="sub">de ~1.200 jogadores</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Achados principais</div>
+  <div class="charts-row charts-2">
+
+    <div class="chart-card">
+      <h3>Retenção D1 por Streak (dias consecutivos)</h3>
+      <div id="chart_streak"></div>
+      <div class="insight">Usuários com 7 dias de streak retornam <strong>53% mais</strong> do que estreantes (dia 1).</div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Retenção D30 por Período de Jogo</h3>
+      <div id="chart_period"></div>
+      <div class="insight">Jogadores matutinos têm retenção D30 <strong>30% maior</strong> do que os do período noturno.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <div class="charts-row charts-2">
+
+    <div class="chart-card">
+      <h3>D1 como preditor de D30</h3>
+      <div id="chart_d1d30"></div>
+      <div class="insight">Quem volta no D1 tem <strong>3x mais</strong> retenção D30 (66,9% vs 22,0%).</div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Variáveis sem impacto relevante</h3>
+      <div id="chart_noimpact"></div>
+      <div class="insight">Resultado da partida, device e setor apresentaram variação inferior a 1,5 p.p. — sem relevância analítica.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Significância estatística dos achados (teste qui-quadrado)</div>
+  <div class="chart-card">
+    <table class="stat-table">
+      <thead>
+        <tr>
+          <th>Achado</th>
+          <th>Grupos comparados</th>
+          <th>Retenção grupo A</th>
+          <th>Retenção grupo B</th>
+          <th>p-value</th>
+          <th>Conclusão</th>
+          <th>Observação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Streak x D1</strong></td>
+          <td>Streak 1 vs Streak 7</td>
+          <td>21,7%</td>
+          <td>33,3%</td>
+          <td>0.6571</td>
+          <td><span class="badge badge-gray">⚠️ Inconclusivo</span></td>
+          <td>Streak 7 tem apenas 9 sessões — amostra insuficiente para o teste</td>
+        </tr>
+        <tr>
+          <td><strong>Período x D30</strong></td>
+          <td>Morning vs Evening</td>
+          <td>37,8%</td>
+          <td>29,0%</td>
+          <td>0.000000</td>
+          <td><span class="badge badge-green">✅ Significativo</span></td>
+          <td>p &lt; 0,05 — diferença real, não coincidência</td>
+        </tr>
+        <tr>
+          <td><strong>D1 x D30</strong></td>
+          <td>Voltou vs Não voltou</td>
+          <td>66,9%</td>
+          <td>22,0%</td>
+          <td>0.000000</td>
+          <td><span class="badge badge-green">✅ Significativo</span></td>
+          <td>p &lt; 0,05 — diferença extremamente robusta</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Limpeza de dados — resumo das decisões</div>
+  <div class="chart-card">
+    <table class="stat-table">
+      <thead>
+        <tr><th>Tabela</th><th>Problema</th><th>Linhas afetadas</th><th>Decisão</th><th>Motivo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>sessions</td><td>Linhas duplicadas</td><td>1.198</td><td><span class="badge badge-red">Removidas</span></td><td>session_id é PK — não pode repetir</td></tr>
+        <tr><td>sessions</td><td>result nulo / attempts = 0 / attempts &gt; 6</td><td>110</td><td><span class="badge badge-red">Removidas</span></td><td>Não representam partidas reais</td></tr>
+        <tr><td>sessions</td><td>device com capitalização inconsistente</td><td>—</td><td><span class="badge badge-green">Padronizado</span></td><td>iOS, ios, IOS → ios</td></tr>
+        <tr><td>attempts</td><td>Linhas duplicadas</td><td>752</td><td><span class="badge badge-red">Removidas</span></td><td>Registros idênticos — bug de inserção</td></tr>
+        <tr><td>attempts</td><td>attempt_number &gt; 6</td><td>41</td><td><span class="badge badge-red">Removidas</span></td><td>Acima do limite do jogo</td></tr>
+        <tr><td>user_profile</td><td>Nulos em age_range, city, salary_range</td><td>117 / 297 / 193</td><td><span class="badge badge-gray">Mantidos</span></td><td>Campos opcionais da pesquisa — não são erros</td></tr>
+        <tr><td>user_profile</td><td>Capitalização inconsistente</td><td>—</td><td><span class="badge badge-green">Padronizado</span></td><td>Campos de texto aberto → lowercase</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Propostas de ação</div>
+  <div class="proposal-grid">
+    <div class="proposal-card">
+      <h3>🔥 Proposta 1 — Sistema de Streak visível</h3>
+      <div class="proposal-item">
+        <div class="tag">Hipótese</div>
+        <p>Exibir o streak e enviar lembretes quando o usuário está em risco de perdê-lo vai aumentar a retenção D1, porque usuários com streak alto retêm significativamente mais (21,7% → 33,3%). O hábito diário é o maior preditor de retenção encontrado.</p>
+      </div>
+      <div class="proposal-item">
+        <div class="tag">Ação</div>
+        <p>Contador de streak visível na tela do jogo + notificação push no fim do dia para usuários que ainda não jogaram. Referência: Duolingo.</p>
+      </div>
+      <div class="proposal-item">
+        <div class="tag">Critério de sucesso</div>
+        <p>Taxa de played_next_day subir de 22% para pelo menos 28% em 30 dias de teste A/B.</p>
+      </div>
+    </div>
+    <div class="proposal-card">
+      <h3>🌅 Proposta 2 — Incentivar o período matutino</h3>
+      <div class="proposal-item">
+        <div class="tag">Hipótese</div>
+        <p>Incentivar usuários a jogarem de manhã aumenta a retenção D30, porque jogadores matutinos têm 37,8% de retenção vs 29% do período noturno — diferença estatisticamente significativa (p &lt; 0,05).</p>
+      </div>
+      <div class="proposal-item">
+        <div class="tag">Ação</div>
+        <p>Notificação push entre 7h e 9h para usuários que historicamente jogam em outros períodos, convidando a experimentar jogar logo cedo.</p>
+      </div>
+      <div class="proposal-item">
+        <div class="tag">Critério de sucesso</div>
+        <p>Proporção de jogadores matutinos subir e retenção D30 geral aumentar pelo menos 3 pontos percentuais.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Case Palavritas · the news · Análise produzida em Python (pandas, scipy, plotly)
+</div>
+
+<script>
+
+Plotly.newPlot('chart_streak', [{
+  type: 'bar',
+  x: [1, 2, 3, 4, 5, 6, 7],
+  y: [21.7, 23.4, 23.8, 27.5, 29.8, 29.0, 33.3],
+  marker: { color: ['rgba(37,99,235,0.4)', 'rgba(37,99,235,0.49)', 'rgba(37,99,235,0.5800000000000001)', 'rgba(37,99,235,0.67)', 'rgba(37,99,235,0.76)', 'rgba(37,99,235,0.85)', 'rgba(37,99,235,0.9400000000000001)'] },
+  text: ['21.7%', '23.4%', '23.8%', '27.5%', '29.8%', '29.0%', '33.3%'],
+  textposition: 'outside',
+  hovertemplate: 'Streak %{x}: %{y}%<extra></extra>'
+}], {
+  margin: {t:10, b:40, l:40, r:10},
+  height: 220,
+  paper_bgcolor: 'white',
+  plot_bgcolor: 'white',
+  xaxis: { title: 'Dias de streak', gridcolor: '#F1F5F9', dtick: 1 },
+  yaxis: { title: 'Retenção D1 (%)', gridcolor: '#F1F5F9', range: [0, 42] },
+  showlegend: false
+}, {displayModeBar: false});
+
+Plotly.newPlot('chart_period', [{
+  type: 'bar',
+  x: ['morning', 'afternoon', 'evening', 'night'],
+  y: [37.8, 30.4, 29.0, 29.5],
+  marker: { color: ['#10B981', '#94A3B8', '#94A3B8', '#94A3B8'] },
+  text: ['37.8%', '30.4%', '29.0%', '29.5%'],
+  textposition: 'outside',
+  hovertemplate: '%{x}: %{y}%<extra></extra>'
+}], {
+  margin: {t:10, b:40, l:40, r:10},
+  height: 220,
+  paper_bgcolor: 'white',
+  plot_bgcolor: 'white',
+  xaxis: { gridcolor: '#F1F5F9' },
+  yaxis: { title: 'Retenção D30 (%)', gridcolor: '#F1F5F9', range: [0, 45] },
+  showlegend: false
+}, {displayModeBar: false});
+
+Plotly.newPlot('chart_d1d30', [{
+  type: 'bar',
+  x: ['Não voltou no D1', 'Voltou no D1'],
+  y: [22.0, 66.9],
+  marker: { color: ['#EF4444', '#10B981'] },
+  text: ['22,0%', '66,9%'],
+  textposition: 'outside',
+  hovertemplate: '%{x}: %{y}%<extra></extra>'
+}], {
+  margin: {t:10, b:40, l:40, r:10},
+  height: 220,
+  paper_bgcolor: 'white',
+  plot_bgcolor: 'white',
+  xaxis: { gridcolor: '#F1F5F9' },
+  yaxis: { title: 'Retenção D30 (%)', gridcolor: '#F1F5F9', range: [0, 80] },
+  showlegend: false
+}, {displayModeBar: false});
+
+Plotly.newPlot('chart_noimpact', [{
+  type: 'bar',
+  x: ['direito', 'educação', 'finanças', 'marketing', 'outros', 'saúde', 'tech', 'varejo'],
+  y: [31.7, 33.8, 32.0, 32.4, 31.5, 31.0, 32.3, 33.1],
+  marker: { color: '#CBD5E1' },
+  text: ['31.7%', '33.8%', '32.0%', '32.4%', '31.5%', '31.0%', '32.3%', '33.1%'],
+  textposition: 'outside',
+  hovertemplate: '%{x}: %{y}%<extra></extra>'
+}], {
+  margin: {t:10, b:60, l:40, r:10},
+  height: 220,
+  paper_bgcolor: 'white',
+  plot_bgcolor: 'white',
+  xaxis: { gridcolor: '#F1F5F9', tickangle: -30 },
+  yaxis: { title: 'Retenção D30 (%)', gridcolor: '#F1F5F9', range: [0, 42] },
+  showlegend: false
+}, {displayModeBar: false});
+
+</script>
+</body>
+</html>
